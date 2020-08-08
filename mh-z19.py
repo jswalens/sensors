@@ -43,11 +43,11 @@ def current_time():
     now = datetime.datetime.now().astimezone(TIMEZONE)
     return now.strftime('%Y-%m-%dT%H:%M:%S%z')
 
-def correct():
+def connect():
     return serial.Serial(DEVICE_PATH, baudrate=9600, timeout=3.0)
 
 def read_all():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x86\x00\x00\x00\x00\x00\x79")
         r = ser.read(9)
 
@@ -67,19 +67,19 @@ def read():
     return {"time": current_time(), "co2": result["co2"]}
 
 def abc_on():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x79\xa0\x00\x00\x00\x00\xe6")
 
 def abc_off():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x79\x00\x00\x00\x00\x00\x86")
 
 def zero_point_calibration():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x87\x00\x00\x00\x00\x00\x78")
 
 def span_point_calibration(span):
-    with correct() as ser:
+    with connect() as ser:
         b3 = span // 256
         byte3 = struct.pack("B", b3)
         b4 = span % 256
@@ -89,15 +89,15 @@ def span_point_calibration(span):
         ser.write(request)
 
 def detection_range_2000():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x99\x00\x00\x00\x07\xd0\x8f")
 
 def detection_range_5000():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x99\x00\x00\x00\x13\x88\xcb")
 
 def detection_range_10000():
-    with correct() as ser:
+    with connect() as ser:
         ser.write(b"\xff\x01\x99\x00\x00\x00\x27\x10\x2f")
 
 def checksum(array):
