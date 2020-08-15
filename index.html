@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html>
+<head>
+
+<title>Sensors</title>
+<meta charset="utf-8">
+
+</head>
+<body>
+
+<script src="https://d3js.org/d3.v5.min.js"></script>
+<script src="https://d3js.org/d3-time.v1.min.js"></script>
+<script src="https://d3js.org/d3-time-format.v2.min.js"></script>
+
+<script type="text/javascript">
+const WIDTH = 1000;
+const HEIGHT = 700;
+const MARGIN = {top: 20, right: 30, bottom: 30, left: 40};
+
+function drawCO2(co2) {
+    co2.forEach(d => d.time = d3.isoParse(d.time));
+
+    const x = d3.scaleUtc()
+        .domain(d3.extent(co2, d => d.time))
+        .range([MARGIN.left, WIDTH - MARGIN.right]);
+
+    const xAxis = g => g
+        .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
+        .call(d3.axisBottom(x).ticks(WIDTH / 80).tickSizeOuter(0));
+
+    const y = d3.scaleLinear()
+        .domain([400, d3.max(co2, d => d.co2)]).nice()
+        .range([HEIGHT - MARGIN.bottom, MARGIN.top]);
+
+    const yAxis = g => g
+        .attr("transform", `translate(${MARGIN.left},0)`)
+        .call(d3.axisLeft(y));
+
+    const line = d3.line()
+        .x(d => x(d.time))
+        .y(d => y(d.co2));
+
+    const svgCO2 = d3.create("svg")
+        .attr("viewBox", [0, 0, WIDTH, HEIGHT]);
+    svgCO2.append("g").call(xAxis);
+    svgCO2.append("g").call(yAxis);
+    svgCO2.append("path").datum(co2)
+        .attr("fill", "none")
+        .attr("stroke", "steelblue")
+        .attr("stroke-width", 1.5)
+        .attr("stroke-linejoin", "round")
+        .attr("stroke-linecap", "round")
+        .attr("d", line);
+
+    document.body.appendChild(svgCO2.node());
+}
+
+function requestCO2() {
+    const req = new XMLHttpRequest();
+    req.open("GET", "co2.json");
+    req.responseType = "json";
+    req.send();
+    req.onload = function () {
+        drawCO2(req.response["co2"]);
+    }
+}
+
+requestCO2();
+</script>
+
+</body>
+</html>
