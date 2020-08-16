@@ -24,7 +24,7 @@ body { font-family: "Roboto", sans-serif; font-size: 1rem; font-weight: 400; lin
 
 <div id="co2" class="widget">
 <div class="measurement">
-  <span class="quantity">CO<sub>2</sub></span>
+  <span class="quantity co2-color">CO<sub>2</sub></span>
   <span id="co2-value" class="value">unknown</span><span class="unit">&ThinSpace;ppm</span>
 </div>
 
@@ -35,11 +35,11 @@ body { font-family: "Roboto", sans-serif; font-size: 1rem; font-weight: 400; lin
 
 <div id="pm" class="widget">
 <div class="measurement">
-  <span class="quantity">PM2.5</span>
+  <span class="quantity pm25-color">PM2.5</span>
   <span id="pm25-value" class="value">unknown</span><span class="unit">&ThinSpace;ppm</span>
 </div>
 <div class="measurement">
-  <span class="quantity">PM10</span>
+  <span class="quantity pm10-color">PM10</span>
   <span id="pm10-value" class="value">unknown</span><span class="unit">&ThinSpace;ppm</span>
 </div>
 
@@ -56,44 +56,65 @@ body { font-family: "Roboto", sans-serif; font-size: 1rem; font-weight: 400; lin
 const WIDTH = 1000;
 const HEIGHT = 300;
 const MARGIN = {top: 20, right: 30, bottom: 30, left: 40};
+const COLORS = ["steelblue", "firebrick"];
+
+function drawChart(id, data, y_properties, y_min) {
+    const x = d3.scaleUtc()
+        .domain(d3.extent(data, d => d.time))
+        .range([MARGIN.left, WIDTH - MARGIN.right]);
+
+    const data_min = Math.min(y_min, ...y_properties.map(name => Math.min(...data.map(d => d[name]))));
+    const data_max = Math.max(...y_properties.map(name => Math.max(...data.map(d => d[name]))));
+    const y = d3.scaleLinear()
+        .domain([data_min, data_max]).nice()
+        .range([HEIGHT - MARGIN.bottom, MARGIN.top]);
+
+    const lines = y_properties.map(name =>
+        [
+            name,
+            d3.line()
+                .x(d => x(d.time))
+                .y(d => y(d[name]))
+        ]
+    );
+
+    const svg = d3.select(`svg#${id}`)
+        .attr("viewBox", [0, 0, WIDTH, HEIGHT]);
+    svg.append("g")
+        .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
+        .call(d3.axisBottom(x).ticks(WIDTH / 80).tickSizeOuter(0));
+    svg.append("g")
+        .attr("transform", `translate(${MARGIN.left},0)`)
+        .call(d3.axisLeft(y));
+    lines.forEach(([name, line], i) => {
+        svg.append("path").datum(data)
+            .attr("fill", "none")
+            .attr("stroke", COLORS[i % COLORS.length])
+            .attr("stroke-width", 1.5)
+            .attr("stroke-linejoin", "round")
+            .attr("stroke-linecap", "round")
+            .attr("d", line);
+        d3.select(`.${name}-color`)
+            .style("color", COLORS[i % COLORS.length]);
+    });
+    return svg;
+}
 
 function drawCO2(co2) {
     co2.forEach(d => d.time = d3.isoParse(d.time));
 
-    const x = d3.scaleUtc()
-        .domain(d3.extent(co2, d => d.time))
-        .range([MARGIN.left, WIDTH - MARGIN.right]);
-
-    const xAxis = g => g
-        .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
-        .call(d3.axisBottom(x).ticks(WIDTH / 80).tickSizeOuter(0));
-
-    const y = d3.scaleLinear()
-        .domain([400, d3.max(co2, d => d.co2)]).nice()
-        .range([HEIGHT - MARGIN.bottom, MARGIN.top]);
-
-    const yAxis = g => g
-        .attr("transform", `translate(${MARGIN.left},0)`)
-        .call(d3.axisLeft(y));
-
-    const line = d3.line()
-        .x(d => x(d.time))
-        .y(d => y(d.co2));
-
-    const svgCO2 = d3.select("svg#co2-chart")
-        .attr("viewBox", [0, 0, WIDTH, HEIGHT]);
-    svgCO2.append("g").call(xAxis);
-    svgCO2.append("g").call(yAxis);
-    svgCO2.append("path").datum(co2)
-        .attr("fill", "none")
-        .attr("stroke", "steelblue")
-        .attr("stroke-width", 1.5)
-        .attr("stroke-linejoin", "round")
-        .attr("stroke-linecap", "round")
-        .attr("d", line);
-
+    drawChart("co2-chart", co2, ["co2"], 400);
     d3.select("#co2-value").text(co2[co2.length - 1].co2);
     d3.select("#co2-time").text(co2[co2.length - 1].time);
+}
+
+function drawPM(pm) {
+    pm.forEach(d => d.time = d3.isoParse(d.time));
+
+    drawChart("pm-chart", pm, ["pm25", "pm10"], 0);
+    d3.select("#pm25-value").text(pm[pm.length - 1].pm25);
+    d3.select("#pm10-value").text(pm[pm.length - 1].pm10);
+    d3.select("#pm-time").text(pm[pm.length - 1].time);
 }
 
 function requestCO2() {
@@ -106,7 +127,18 @@ function requestCO2() {
     }
 }
 
+function requestPM() {
+    const req = new XMLHttpRequest();
+    req.open("GET", "pm.json");
+    req.responseType = "json";
+    req.send();
+    req.onload = function () {
+        drawPM(req.response["pm"]);
+    }
+}
+
 requestCO2();
+requestPM();
 </script>
 
 </body>
