@@ -60,13 +60,15 @@ const COLORS = ["steelblue", "firebrick"];
 
 const formatTime = d3.timeFormat("%H:%M");
 
-function drawChart(id, data, y_properties, y_min) {
+function drawChart(id, data, y_properties, y_min, y_max) {
     const x = d3.scaleUtc()
         .domain(d3.extent(data, d => d.time))
         .range([MARGIN.left, WIDTH - MARGIN.right]);
 
+    if (!y_min) y_min = +Infinity
+    if (!y_max) y_max = -Infinity
     const data_min = Math.min(y_min, ...y_properties.map(name => Math.min(...data.map(d => d[name]))));
-    const data_max = Math.max(...y_properties.map(name => Math.max(...data.map(d => d[name]))));
+    const data_max = Math.max(y_max, ...y_properties.map(name => Math.max(...data.map(d => d[name]))));
     const y = d3.scaleLinear()
         .domain([data_min, data_max]).nice()
         .range([HEIGHT - MARGIN.bottom, MARGIN.top]);
@@ -114,7 +116,7 @@ function drawCO2(co2) {
 function drawPM(pm) {
     pm.forEach(d => d.time = d3.isoParse(d.time));
 
-    drawChart("pm-chart", pm, ["pm25", "pm10"], 0);
+    drawChart("pm-chart", pm, ["pm25", "pm10"], 0, 200);
     d3.select("#pm25-value").text(pm[pm.length - 1].pm25);
     d3.select("#pm10-value").text(pm[pm.length - 1].pm10);
     d3.select("#pm-time").text(formatTime(pm[pm.length - 1].time));
