@@ -58,6 +58,8 @@ const HEIGHT = 300;
 const MARGIN = {top: 20, right: 30, bottom: 30, left: 40};
 const COLORS = ["steelblue", "firebrick"];
 
+const formatTime = d3.timeFormat("%H:%M");
+
 function drawChart(id, data, y_properties, y_min) {
     const x = d3.scaleUtc()
         .domain(d3.extent(data, d => d.time))
@@ -105,7 +107,7 @@ function drawCO2(co2) {
 
     drawChart("co2-chart", co2, ["co2"], 400);
     d3.select("#co2-value").text(co2[co2.length - 1].co2);
-    d3.select("#co2-time").text(co2[co2.length - 1].time);
+    d3.select("#co2-time").text(formatTime(co2[co2.length - 1].time));
 }
 
 function drawPM(pm) {
@@ -114,7 +116,7 @@ function drawPM(pm) {
     drawChart("pm-chart", pm, ["pm25", "pm10"], 0);
     d3.select("#pm25-value").text(pm[pm.length - 1].pm25);
     d3.select("#pm10-value").text(pm[pm.length - 1].pm10);
-    d3.select("#pm-time").text(pm[pm.length - 1].time);
+    d3.select("#pm-time").text(formatTime(pm[pm.length - 1].time));
 }
 
 function requestCO2() {
