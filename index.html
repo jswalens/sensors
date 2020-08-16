@@ -84,7 +84,7 @@ function drawChart(id, data, y_properties, y_min, y_max) {
 
     const svg = d3.select(`svg#${id}`)
         .attr("viewBox", [0, 0, WIDTH, HEIGHT]);
-    d3.select(`svg#${id} > *`).remove();
+    svg.selectAll("*").remove();
     svg.append("g")
         .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
         .call(d3.axisBottom(x).ticks(WIDTH / 80).tickSizeOuter(0));
