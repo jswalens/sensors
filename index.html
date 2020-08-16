@@ -5,8 +5,48 @@
 <title>Sensors</title>
 <meta charset="utf-8">
 
+<style type="text/css">
+body { font-family: "Roboto", sans-serif; font-size: 1rem; font-weight: 400; line-height: 1.5;
+  background-color: #000; color: hsl(0, 0%, 97%); }
+
+.widget { max-width: 80rem; margin: 1rem auto; padding: 1rem; border-radius: 1rem;
+  border: 2px solid hsl(0, 0%, 45%); text-align: center; }
+.widget .measurement { font-size: 6rem; line-height: 1; }
+.widget .measurement .quantity { font-size: 3rem; color: hsl(0, 0%, 80%); }
+.widget .measurement .unit { font-size: 3rem; }
+.widget .time { font-size: 1rem; color: hsl(0, 0%, 80%); }
+.widget .chart { }
+.widget .chart svg { height: 30vh; max-width: 80rem; }
+</style>
+
 </head>
 <body>
+
+<div id="co2" class="widget">
+<div class="measurement">
+  <span class="quantity">CO<sub>2</sub></span>
+  <span id="co2-value" class="value">unknown</span><span class="unit">&ThinSpace;ppm</span>
+</div>
+
+<div class="time"><time id="co2-time"">&nbsp;</time></div>
+
+<div class="chart"><svg id="co2-chart"></svg></div>
+</div>
+
+<div id="pm" class="widget">
+<div class="measurement">
+  <span class="quantity">PM2.5</span>
+  <span id="pm25-value" class="value">unknown</span><span class="unit">&ThinSpace;ppm</span>
+</div>
+<div class="measurement">
+  <span class="quantity">PM10</span>
+  <span id="pm10-value" class="value">unknown</span><span class="unit">&ThinSpace;ppm</span>
+</div>
+
+<div class="time"><time id="pm-time"">&nbsp;</time></div>
+
+<div class="chart"><svg id="pm-chart"></svg></div>
+</div>
 
 <script src="https://d3js.org/d3.v5.min.js"></script>
 <script src="https://d3js.org/d3-time.v1.min.js"></script>
@@ -14,7 +54,7 @@
 
 <script type="text/javascript">
 const WIDTH = 1000;
-const HEIGHT = 700;
+const HEIGHT = 300;
 const MARGIN = {top: 20, right: 30, bottom: 30, left: 40};
 
 function drawCO2(co2) {
@@ -40,7 +80,7 @@ function drawCO2(co2) {
         .x(d => x(d.time))
         .y(d => y(d.co2));
 
-    const svgCO2 = d3.create("svg")
+    const svgCO2 = d3.select("svg#co2-chart")
         .attr("viewBox", [0, 0, WIDTH, HEIGHT]);
     svgCO2.append("g").call(xAxis);
     svgCO2.append("g").call(yAxis);
@@ -52,7 +92,8 @@ function drawCO2(co2) {
         .attr("stroke-linecap", "round")
         .attr("d", line);
 
-    document.body.appendChild(svgCO2.node());
+    d3.select("#co2-value").text(co2[co2.length - 1].co2);
+    d3.select("#co2-time").text(co2[co2.length - 1].time);
 }
 
 function requestCO2() {
