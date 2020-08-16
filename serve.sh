@@ -1,2 +1,2 @@
 #!/bin/sh
-gunicorn serve:APP
+gunicorn -b 0.0.0.0:8080 serve:APP
