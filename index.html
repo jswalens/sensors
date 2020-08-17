@@ -145,7 +145,7 @@ function requestPM() {
 function update() {
     requestCO2();
     requestPM();
-    setInterval(update, 30000);
+    setTimeout(update, 30000);
 }
 
 update();
