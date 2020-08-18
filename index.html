@@ -61,7 +61,7 @@ const COLORS = ["steelblue", "firebrick"];
 const formatTime = d3.timeFormat("%H:%M");
 
 function drawChart(id, data, y_properties, y_min, y_max) {
-    const x = d3.scaleUtc()
+    const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.time))
         .range([MARGIN.left, WIDTH - MARGIN.right]);
 
