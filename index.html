@@ -125,6 +125,7 @@ function drawPM(pm) {
 function requestCO2() {
     const req = new XMLHttpRequest();
     req.open("GET", "co2.json");
+    req.timeout = 2000;
     req.responseType = "json";
     req.send();
     req.onload = function () {
@@ -135,6 +136,7 @@ function requestCO2() {
 function requestPM() {
     const req = new XMLHttpRequest();
     req.open("GET", "pm.json");
+    req.timeout = 2000;
     req.responseType = "json";
     req.send();
     req.onload = function () {
