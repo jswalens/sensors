@@ -17,6 +17,8 @@ body { font-family: "Roboto", sans-serif; font-size: 1rem; font-weight: 400; lin
 .widget .time { font-size: 1rem; color: hsl(0, 0%, 80%); }
 .widget .chart { }
 .widget .chart svg { height: 30vh; max-width: 80rem; }
+
+svg .overlay { fill: none; pointer-events: all; }
 </style>
 
 </head>
@@ -56,24 +58,27 @@ body { font-family: "Roboto", sans-serif; font-size: 1rem; font-weight: 400; lin
 const WIDTH = 1000;
 const HEIGHT = 300;
 const MARGIN = {top: 20, right: 30, bottom: 30, left: 40};
-const COLORS = ["steelblue", "firebrick"];
+const SERIES_COLORS = ["steelblue", "firebrick"];
+const seriesColor = i => SERIES_COLORS[i % SERIES_COLORS.length];
 
 const formatTime = d3.timeFormat("%H:%M");
 
-function drawChart(id, data, y_properties, y_min, y_max) {
+function drawChart(id, data, series, y_min, y_max) {
+    // x and y functions
     const x = d3.scaleTime()
         .domain(d3.extent(data, d => d.time))
         .range([MARGIN.left, WIDTH - MARGIN.right]);
 
     if (!y_min) y_min = +Infinity
     if (!y_max) y_max = -Infinity
-    const data_min = Math.min(y_min, ...y_properties.map(name => Math.min(...data.map(d => d[name]))));
-    const data_max = Math.max(y_max, ...y_properties.map(name => Math.max(...data.map(d => d[name]))));
+    const data_min = Math.min(y_min, ...series.map(name => Math.min(...data.map(d => d[name]))));
+    const data_max = Math.max(y_max, ...series.map(name => Math.max(...data.map(d => d[name]))));
     const y = d3.scaleLinear()
         .domain([data_min, data_max]).nice()
         .range([HEIGHT - MARGIN.bottom, MARGIN.top]);
 
-    const lines = y_properties.map(name =>
+    // lines
+    const lines = series.map(name =>
         [
             name,
             d3.line()
@@ -82,26 +87,86 @@ function drawChart(id, data, y_properties, y_min, y_max) {
         ]
     );
 
+    // <svg>
     const svg = d3.select(`svg#${id}`)
         .attr("viewBox", [0, 0, WIDTH, HEIGHT]);
     svg.selectAll("*").remove();
+
+    // axes
     svg.append("g")
         .attr("transform", `translate(0,${HEIGHT - MARGIN.bottom})`)
         .call(d3.axisBottom(x).ticks(WIDTH / 80).tickSizeOuter(0));
     svg.append("g")
         .attr("transform", `translate(${MARGIN.left},0)`)
         .call(d3.axisLeft(y));
+
+    // data lines
     lines.forEach(([name, line], i) => {
         svg.append("path").datum(data)
             .attr("fill", "none")
-            .attr("stroke", COLORS[i % COLORS.length])
+            .attr("stroke", seriesColor(i))
             .attr("stroke-width", 1.5)
             .attr("stroke-linejoin", "round")
             .attr("stroke-linecap", "round")
             .attr("d", line);
         d3.select(`.${name}-color`)
-            .style("color", COLORS[i % COLORS.length]);
+            .style("color", seriesColor(i));
     });
+
+    { // hover
+        const hover = svg.append("g")
+            .attr("class", "hover")
+            .style("display", "none");
+
+        const line = hover.append("line")
+            .attr("stroke", "#FFF")
+            .attr("stroke-width", 1)
+            .attr("y1", -HEIGHT + MARGIN.top + 15*(1 + series.length))
+            .attr("y2", -MARGIN.bottom);
+
+        const label = hover.append("text")
+            .attr("id", "hover-label")
+            .attr("text-anchor", "middle")
+            .attr("fill", "#FFF")
+            .attr("dy", "1.2em");
+
+        const overlay = svg.append("rect")
+            .attr("class", "overlay")
+            .attr("x", MARGIN.left)
+            .attr("y", MARGIN.top)
+            .attr("width", WIDTH - MARGIN.right - MARGIN.left - 1)
+            .attr("height", HEIGHT - MARGIN.bottom - MARGIN.top)
+            .on("mouseover", () => hover.style("display", null))
+            .on("mouseout", () => hover.style("display", "none"))
+            .on("mousemove", mousemove);
+
+        const bisect = d3.bisector(d => d.time).left;
+        const dateFormat = d3.timeFormat("%H:%M");
+        function mousemove() {
+            const x0 = x.invert(d3.mouse(this)[0]);
+            const i = bisect(data, x0, 1);
+            const d0 = data[i - 1];
+            const d1 = data[i];
+            const d = x0 - d0.time > d1.time - x0 ? d1 : d0;
+
+            line.attr("transform", `translate(${x(d.time)}, ${HEIGHT})`);
+
+            label.attr("transform", `translate(${x(d.time)}, 0)`);
+            label.selectAll("*").remove();
+            label.append("tspan")
+                .attr("x", "0")
+                .attr("dy", "1.2em")
+                .text(dateFormat(d.time));
+            series.forEach((name, i) => {
+                label.append("tspan")
+                    .attr("x", "0")
+                    .attr("dy", "1.2em")
+                    .attr("fill", seriesColor(i))
+                    .text(d[name]);
+            });
+        }
+    }
+
     return svg;
 }
 
