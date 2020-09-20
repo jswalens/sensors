@@ -39,34 +39,32 @@ def parse_sds011_line(line):
 
 @APP.route("/co2.json")
 def data_co2():
-    with open("mh-z19.log") as f:
-        data = f.readlines()
     TIME_LIMIT = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)
     result = []
-    for l in data:
-        d = parse_mhz19_line(l)
-        if d is None:
-            continue
-        if d["time"] < TIME_LIMIT:
-            continue
-        d["time"] = d["time"].isoformat()
-        result.append(d)
+    with open("mh-z19.log") as f:
+        for l in f:
+            d = parse_mhz19_line(l)
+            if d is None:
+                continue
+            if d["time"] < TIME_LIMIT:
+                continue
+            d["time"] = d["time"].isoformat()
+            result.append(d)
     return jsonify(co2=result)
 
 @APP.route("/pm.json")
 def data_pm():
-    with open("sds-011.log") as f:
-        data = f.readlines()
     TIME_LIMIT = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)
     result = []
-    for l in data:
-        d = parse_sds011_line(l)
-        if d is None:
-            continue
-        if d["time"] < TIME_LIMIT:
-            continue
-        d["time"] = d["time"].isoformat()
-        result.append(d)
+    with open("sds-011.log") as f:
+        for l in f:
+            d = parse_sds011_line(l)
+            if d is None:
+                continue
+            if d["time"] < TIME_LIMIT:
+                continue
+            d["time"] = d["time"].isoformat()
+            result.append(d)
     return jsonify(pm=result)
 
 if __name__ == "__main__":
