@@ -29,13 +29,17 @@ def parse_sds011_line(line):
     try:
         time = dt.datetime.strptime(line[0], "%Y-%m-%dT%H:%M:%S%z")
         time = time.astimezone(dt.timezone.utc)
+        pm25 = float(line[1])
+        pm10 = float(line[2])
+        if pm25 == 0 and pm10 == 0:
+            return None
+        return {
+            "time": time,
+            "pm25": pm25,
+            "pm10": pm10,
+        }
     except ValueError:
         return None
-    return {
-        "time": time,
-        "pm25": float(line[1]),
-        "pm10": float(line[2]),
-    }
 
 @APP.route("/co2.json")
 def data_co2():
