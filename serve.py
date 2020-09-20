@@ -2,7 +2,7 @@
 
 import datetime as dt
 import json
-import orjson
+import rapidjson
 from flask import Flask, send_file, jsonify
 APP = Flask("sensors",)
 
@@ -12,7 +12,7 @@ def home():
 
 def parse_mhz19_line(line):
     try:
-        line = orjson.loads(line)
+        line = rapidjson.loads(line)
         return {
             "time": dt.datetime.strptime(line["time"], "%Y-%m-%dT%H:%M:%S%z"),
             "co2": line["co2"],
