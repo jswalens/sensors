@@ -1,5 +1,6 @@
 #!/usr/bin/env python3
 
+import re
 import datetime as dt
 import json
 import rapidjson
@@ -10,14 +11,24 @@ APP = Flask("sensors",)
 def home():
     return send_file("index.html")
 
+MHZ19_FORMAT = re.compile(r'''{"time": "([\dTt:+-]*)", "co2": (\d+), "temperature": (\d+),''')
+
 def parse_mhz19_line(line):
     try:
-        line = rapidjson.loads(line)
+        match = MHZ19_FORMAT.match(line)
+        if not match:
+            return None
         return {
-            "time": dt.datetime.strptime(line["time"], "%Y-%m-%dT%H:%M:%S%z"),
-            "co2": line["co2"],
-            "temperature": line["temperature"],
+            "time": dt.datetime.strptime(match[1], "%Y-%m-%dT%H:%M:%S%z"),
+            "co2": int(match[2]),
+            "temperature": int(match[3]),
         }
+        # line = rapidjson.loads(line)
+        # return {
+        #     "time": dt.datetime.strptime(line["time"], "%Y-%m-%dT%H:%M:%S%z"),
+        #     "co2": line["co2"],
+        #     "temperature": line["temperature"],
+        # }
     except json.decoder.JSONDecodeError:
         return None
     except ValueError:
