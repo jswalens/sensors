@@ -56,17 +56,16 @@ def parse_sds011_line(line):
 @APP.route("/co2.json")
 def data_co2():
     TIME_LIMIT = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)
-    LINE_LIMIT = 12000  # 14 days of a measurement every 2 minutes = 10.080 measurements
     result = []
     with open("mh-z19.log") as f:
         data = f.readlines()
-        data = data[-LINE_LIMIT:]
+        data.reverse()
     for l in data:
         d = parse_mhz19_line(l)
         if d is None:
             continue
         if d["time"] < TIME_LIMIT:
-            continue
+            break
         d["time"] = d["time"].isoformat()
         result.append(d)
     return jsonify(co2=result)
@@ -74,17 +73,16 @@ def data_co2():
 @APP.route("/pm.json")
 def data_pm():
     TIME_LIMIT = dt.datetime.now(dt.timezone.utc) - dt.timedelta(days=14)
-    LINE_LIMIT = 2500  # 14 days of a measurement every 10 minutes = 2016 measurements
     result = []
     with open("sds-011.log") as f:
         data = f.readlines()
-        data = data[-LINE_LIMIT:]
+        data.reverse()
     for l in data:
         d = parse_sds011_line(l)
         if d is None:
             continue
         if d["time"] < TIME_LIMIT:
-            continue
+            break
         d["time"] = d["time"].isoformat()
         result.append(d)
     return jsonify(pm=result)
