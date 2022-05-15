@@ -68,6 +68,7 @@ def data_co2():
             break
         d["time"] = d["time"].isoformat()
         result.append(d)
+    result.reverse()
     return jsonify(co2=result)
 
 @APP.route("/pm.json")
@@ -85,6 +86,7 @@ def data_pm():
             break
         d["time"] = d["time"].isoformat()
         result.append(d)
+    result.reverse()
     return jsonify(pm=result)
 
 if __name__ == "__main__":
