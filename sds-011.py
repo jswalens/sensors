@@ -6,7 +6,7 @@ import time
 import pytz
 from sds011 import SDS011
 
-WAIT_PERIOD = 10 # minutes
+WAIT_PERIOD = 30 # minutes
 TIMEZONE = pytz.timezone('Europe/Brussels')
 
 sensor = SDS011('/dev/ttyUSB0')
