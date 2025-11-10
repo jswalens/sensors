@@ -1,2 +1,2 @@
 #!/usr/bin/env bash
-python3 sds-011.py | tee -a sds-011.log
+while true; do python3 sds-011.py | tee -a sds-011.log; sleep 30m; done
