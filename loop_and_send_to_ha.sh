@@ -32,6 +32,7 @@ post_to_ha() {
   local state="$2"
   local attr_json="$3"
 
+  # For debugging, change -f to -v
   if ! curl -s -f -X POST \
     -H "Authorization: Bearer $HA_TOKEN" \
     -H "Content-Type: application/json" \
@@ -53,10 +54,10 @@ read_mhz19() {
     log "CO₂: $co2 ppm; temperature: $temp °C (timestamp $timestamp)"
 
     if [[ -n "$co2" ]]; then
-      post_to_ha "sensor.mhz19_co2" "$co2" '{"friendly_name": "CO₂", "icon": "mdi:molecule-co2", "unit_of_measurement":"ppm"}'
+      post_to_ha "sensor.mhz19_co2" "$co2" '{"friendly_name": "CO₂", "icon": "mdi:molecule-co2", "device_class": "co2", "unit_of_measurement":"ppm", "state_class": "measurement"}'
     fi
     if [[ -n "$temp" ]]; then
-      post_to_ha "sensor.mhz19_temperature" "$temp" '{"friendly_name": "temperature", "icon": "mdi:temperature-celsius", "unit_of_measurement":"°C"}'
+      post_to_ha "sensor.mhz19_temperature" "$temp" '{"friendly_name": "temperature", "icon": "mdi:temperature-celsius", "device_class": "temperature", "unit_of_measurement":"°C", "state_class": "measurement"}'
       # TODO does this make sense, or should this be an attribute of the one above?
     fi
 
@@ -77,10 +78,10 @@ read_sds011() {
     log "PM2.5: $pm25 µg/m³; PM10: $pm10 µg/m³ (timestamp $timestamp)"
 
     if [[ -n "$pm25" ]]; then
-      post_to_ha "sensor.sds011_pm25" "$pm25" '{"friendly_name": "PM2.5", "icon": "mdi:air-filter", "unit_of_measurement":"µg/m³"}'
+      post_to_ha "sensor.sds011_pm25" "$pm25" '{"friendly_name": "PM2.5", "icon": "mdi:air-filter", "device_class": "pm25", "unit_of_measurement":"µg/m³", "state_class": "measurement"}'
     fi
     if [[ -n "$pm10" ]]; then
-      post_to_ha "sensor.sds011_pm10" "$pm10" '{"friendly_name": "PM10", "icon": "mdi:air-filter", "unit_of_measurement":"µg/m³"}'
+      post_to_ha "sensor.sds011_pm10" "$pm10" '{"friendly_name": "PM10", "icon": "mdi:air-filter", "device_class": "pm10", "unit_of_measurement":"µg/m³", "state_class": "measurement"}'
     fi
 
     sleep 30m
